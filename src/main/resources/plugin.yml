@@ -1,0 +1,24 @@
+name: CPVisualizer
+version: '${version}'
+main: ru.mamont.cpv.CoreProtectVisualizerPlugin
+api-version: '26.2'
+description: Private visualization of CoreProtect history
+depend: [CoreProtect]
+commands:
+  cpv:
+    description: CoreProtect Visualizer
+    permission: cpvisualizer.use
+    usage: /cpv
+permissions:
+  cpvisualizer.use:
+    default: op
+  cpvisualizer.search:
+    default: op
+  cpvisualizer.teleport:
+    default: op
+  cpvisualizer.admin:
+    default: op
+    children:
+      cpvisualizer.use: true
+      cpvisualizer.search: true
+      cpvisualizer.teleport: true

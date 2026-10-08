@@ -1,0 +1,31 @@
+search:
+  max-results: 500
+  default-time: 24h
+  max-time: 30d
+  cooldown-ms: 1000
+  concurrent-queries: 2
+  queued-queries: 8
+  max-radius: 5000
+  # Max rows scanned per loaded world in all-player block lookups (system actors are excluded).
+  block-scan-limit: 2000
+  # Bounds for container post-filtering and historical evidence.
+  container-scan-limit: 2000
+  history-position-limit: 128
+  history-row-limit: 1000
+  timeout-seconds: 30
+visualization:
+  max-visible-positions: 100
+  view-distance: 96
+  lifetime-seconds: 300
+  recent:
+    max-age: 15m
+    color: GREEN
+  medium:
+    max-age: 1h
+    color: YELLOW
+  old:
+    max-age: 6h
+    color: GOLD
+  very-old:
+    color: RED
+display-timezone: Europe/Moscow
