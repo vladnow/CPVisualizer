@@ -1,10 +1,34 @@
 # CPVisualizer
 
-Серверный административный аддон CoreProtect для **Paper 26.2 / Java 25**.
-Отдельный плагин: не меняет CoreProtect, его конфигурацию или базу данных.
-Клиентский мод, ProtocolLib и доступ к SQL не нужны.
+**Private CoreProtect history visualization for Paper 26.2 and Java 25.**
 
-## Новое в 1.1.0: все блоки и все игроки
+CPVisualizer is a server-side administration plugin. Search recorded block and
+container events, browse them in an inventory GUI, and highlight matching
+positions for the administrator running the search. Each administrator has an
+independent session. No client mod or ProtocolLib is required.
+
+The plugin reads history through the public CoreProtect API. It does not change
+real blocks, roll back events, or modify CoreProtect's configuration or database.
+
+## Requirements and installation
+
+| Requirement | Version |
+|---|---|
+| Server | Paper 26.2 |
+| Java | 25 |
+| Required plugin | CoreProtect 24.1, API 12 enabled |
+
+1. Stop the server.
+2. Install CoreProtect separately, or keep the existing compatible installation.
+3. Download `CPVisualizer.jar` from [GitHub Releases](../../releases/latest).
+4. Place the JAR in the server's `plugins/` directory alongside CoreProtect.
+5. Start the server with Java 25 and run `/cpv` in game as an operator.
+
+CoreProtect is a required dependency and is **not included** in the download.
+CPVisualizer disables itself if the dependency or its API is unavailable.
+Version 1.1.0's in-game menus and messages are in Russian; this README is in English.
+
+## Quick start: all players and all blocks
 
 ```text
 /cpv player all
@@ -15,308 +39,245 @@
 /cpv search
 ```
 
-Этот пример ищет действия всех онлайн- и офлайн-игроков со всеми типами блоков
-за сутки в квадрате X/Z радиуса 100 от администратора. `/cpv blocks all` и
-`/cpv bloks all` также снимают фильтр блока. Вместо `all` можно указать `*`.
-В GUI выбора игроков и блоков есть кнопки «Все игроки» и «Все блоки».
-Точный ник или Material снова включает соответствующий фильтр; оба режима
-«все» независимы от выбора действий и области. Параметр `all` зарезервирован
-для общего поиска и не используется как буквальный ник.
+This searches recorded actions by online and offline players involving any block
+type during the last 24 hours, within an inclusive X/Z square extending 100 blocks
+from the administrator in each direction. The radius includes all heights, rather
+than defining a sphere. The search center is captured when `/cpv search` runs.
 
-Системные записи CoreProtect с именами `#fire`, `#tnt`, `#hopper` и другими
-именами, начинающимися с `#`, не относятся к игрокам и исключаются из режима
-«Все игроки». Лимиты и тайм-ауты применяются и к общему поиску.
+`/cpv blocks all`, `/cpv bloks all`, and `*` instead of `all` also clear the block
+filter. `/cpv player *` clears the player filter. The player and block selectors
+have corresponding GUI buttons. Selecting a particular player or material
+restores that filter. Action, time, and scope filters remain independent.
 
-У API v12 есть ограничение: `performPartialLookup` запрещает `#global`
-без положительного радиуса. Поэтому WORLD для всех игроков выполняется одним
-запросом от координат X=0, Z=0 с радиусом 30 000 000, покрывающим допустимые
-ванильные координаты. Область не зависит от положения или размера world border.
-ALL для всех игроков объединяет такие запросы по каждому **загруженному миру**
-из снимка Paper. Незагруженные миры блоковый поиск всех игроков не включает;
-после поиска выводится отдельное уведомление. Конкретный игрок с областью ALL
-по-прежнему ищется во всей доступной истории API, в том числе в незагруженных
-мирах. Чанки для поиска не загружаются и не генерируются.
+CoreProtect system actors whose names begin with `#`, such as `#fire`, `#tnt`, and
+`#hopper`, are excluded from all-player searches. `all` is a reserved selector,
+not a literal player name.
 
-Все блоки + контейнерное действие включает транзакции даже без подтверждённого
-Material контейнера. Такие результаты имеют обозначение «Контейнер: тип
-неизвестен»; тип предмета показывается только в дополнительных данных.
-При конкретном CHEST/BARREL неподтверждённые записи по-прежнему исключаются.
-
-Публикация: см. [PUBLISHING.md](PUBLISHING.md). CoreProtect не включается в JAR
-и публичный архив исходников. Публичная сборка может получить compileOnly API
-CoreProtect из официального Maven без загрузки чужого JAR в репозиторий.
-
-## Установка
-
-1. Остановите сервер.
-2. Оставьте ваш CoreProtect 24.1 в `plugins/`.
-3. Положите `CPVisualizer.jar` из `build/libs/` в `plugins/`.
-4. Запустите сервер на Java 25. CoreProtect API должен быть включён.
-5. Войдите под OP и выполните `/cpv`.
-
-Все permissions по умолчанию выдаются только OP. Для делегирования используйте
-`cpvisualizer.use`, `cpvisualizer.search`, `cpvisualizer.teleport`.
-`cpvisualizer.admin` включает перечисленные права и разрешает `/cpv reload`.
-
-В `plugin.yml` указан **depend: [CoreProtect]**: без CoreProtect аддон не имеет
-самостоятельной функции. Paper обеспечивает порядок загрузки и выдаёт явную ошибку
-о недостающей зависимости. При запуске аддон дополнительно проверяет тип плагина,
-его состояние, `getAPI()`, `APIVersion() >= 12`, `isEnabled()`. При ошибке отключается.
-
-## Быстрый пример
+To investigate one player's container additions, replace `ExamplePlayer` with
+the historical player name:
 
 ```text
-/cpv player mamont124_1994
+/cpv player ExamplePlayer
 /cpv block chest
-/cpv action INTERACT
+/cpv action CONTAINER_ADD
 /cpv time 6h
 /cpv scope world
 /cpv search
 ```
 
-Чтобы увидеть места, где игрок добавлял предметы в сундуки, выберите
-`/cpv action CONTAINER_ADD`. Тип сундука устанавливается по истории, а не по
-блоку, который сейчас находится на его месте. Для уничтоженных сундуков это
-тоже работает, если в CoreProtect осталась достаточная история.
+The player does not have to be online or present in Paper's local player cache.
 
-## Команды и GUI
+## Commands
 
-| Команда | Действие |
+Commands are available in game. `/cpv help` displays command usage.
+
+| Command | Description |
 |---|---|
-| `/cpv` | Меню фильтров |
-| `/cpv player <ник>` | Любой исторический ник, онлайн не требуется |
-| `/cpv player all` | Все онлайн- и офлайн-игроки из истории |
-| `/cpv block <material>` | Точный Material, в том числе `redstone_wire` |
-| `/cpv block all`, `/cpv blocks all` | Все типы блоков одновременно |
-| `/cpv blocks [часть_названия]` | Поиск и постраничный выбор блоков |
-| `/cpv action <тип>` | PLACE, BREAK, INTERACT, CONTAINER_ADD, CONTAINER_REMOVE, ALL |
-| `/cpv time <время>` | `15m`, `6h`, `3d`, `1d6h`; также секунды `30s` |
-| `/cpv scope world` | Текущий мир на момент запуска поиска |
-| `/cpv scope all` | Все миры, присутствующие в истории CoreProtect |
-| `/cpv radius <число>` | Радиус и переключение в режим RADIUS |
-| `/cpv scope radius` | Вернуться к ранее выбранному радиусу |
-| `/cpv search` | Запустить запрос, отменить предыдущий запрос своей сессии |
-| `/cpv results` | Открыть найденные события, 45 результатов на странице |
-| `/cpv next`, `/cpv prev` | Выбрать результат с циклическим переключением |
-| `/cpv tp` | Перейти к выбранному результату |
-| `/cpv info` | Подробности выбранного события |
-| `/cpv clear` | Отменить поиск, удалить результаты и метки |
-| `/cpv reload` | Проверить и применить конфигурацию; очистить поиски/метки |
+| `/cpv` | Open the filter menu. |
+| `/cpv player <name>` | Select an online or historical offline player name. |
+| `/cpv player all` | Search all players in the recorded history. |
+| `/cpv block <material>` | Select an exact block material, such as `chest` or `redstone_wire`. |
+| `/cpv block all`, `/cpv blocks all` | Search every block type. |
+| `/cpv blocks [text]` | Browse and filter the paginated material selector. |
+| `/cpv action <type>` | Select `PLACE`, `BREAK`, `INTERACT`, `CONTAINER_ADD`, `CONTAINER_REMOVE`, or `ALL`. |
+| `/cpv time <duration>` | Set a period, such as `30s`, `15m`, `6h`, `3d`, or `1d6h`. |
+| `/cpv scope world` | Search the world occupied when the search starts. |
+| `/cpv scope all` | Search across worlds; see the loaded-world restriction below. |
+| `/cpv radius <number>` | Set the radius and switch to radius scope. |
+| `/cpv scope radius` | Return to the previously selected radius. |
+| `/cpv search` | Start a search and replace the previous request in this session. |
+| `/cpv results` | Open saved results, with 45 events per page. |
+| `/cpv next`, `/cpv prev` | Select the next or previous event, wrapping at either end. |
+| `/cpv tp` | Teleport to the selected event if permitted. |
+| `/cpv info` | Display details of the selected event. |
+| `/cpv clear` | Cancel the search and remove saved results and highlights. |
+| `/cpv reload` | Validate and apply configuration, clearing searches and highlights. |
 
-В меню доступны все восемь предустановленных периодов и подсказки для ручного
-ввода. Меню игроков содержит онлайн-игроков и до 256 введённых в этой сессии
-работы сервера имён, а также найденные имена из результатов. Для любого другого офлайн-игрока используйте ручной ввод:
-это не требует записи в локальном списке игроков Paper или обращения к Mojang.
-Полный каталог пользователей базы CoreProtect не сканируется.
+Changing filters affects the **next** search; it does not replace the current
+saved results. The GUI provides time presets, player and block selectors, and
+event details including time, world, coordinates, player, material, and action.
+Clicking a result selects it and requests teleportation if the administrator has
+the required permission.
 
-GUI результатов показывает время, мир, XYZ, игрока, материал и действие. Клик
-выбирает результат, усиливает его выделение и запрашивает телепортацию при наличии
-права. Изменения фильтров относятся к **следующему** поиску, текущая выборка сохраняется.
+The player menu lists online players, up to 256 names remembered during the
+current server run, and names from search results. It does not scan CoreProtect's
+entire user directory. Use `/cpv player <name>` for other historical players.
 
-## Визуализация
+## Permissions
 
-Метка — временный `BlockDisplay` из белого витража, немного больше блока,
-со светящейся окантовкой цвета давности. Выбранная позиция выделяется сильнее.
-`setVisibleByDefault(false)` задаётся в callback **до добавления сущности в мир**;
-`showEntity(plugin, player-owned-display)` вызывается только для владельца.
-Метки не видны остальным игрокам, включая подключившихся позже.
+All permissions default to operators. Grant individual permissions through a
+permission manager to delegate access.
 
-Стеклянная текстура частично прозрачна; произвольной альфы у BlockDisplay нет.
-Цвет окантовки настраивается отдельно от белой стеклянной поверхности.
-Внешний вид зависит от клиентских настроек и шейдеров. Это обычные серверные
-display entities с ограничениями трекинга/дальности, не полноценный Fabric ESP.
+| Permission | Access |
+|---|---|
+| `cpvisualizer.use` | Use `/cpv` and its filter menus. |
+| `cpvisualizer.search` | Search, view results, and select events. |
+| `cpvisualizer.teleport` | Teleport to events; normal use also requires search access. |
+| `cpvisualizer.admin` | Includes the permissions above and allows configuration reloads. |
 
-Одновременно показывается не более 100 **уникальных позиций** в радиусе 96 блоков
-от администратора. Повторные события остаются отдельными записями в GUI.
-Для совмещённых меток берётся выбранное событие, иначе самое новое.
-За один цикл создаётся до 10 меток на пользователя; цикл — раз в 10 тиков.
-Метки создаются только в уже загруженных чанках текущего мира. При перемещении
-администратора видимый набор обновляется; глобальная выборка не загружает миры.
-Время жизни — 300 секунд после поиска/выбора результата; выбор `next`/`prev`
-возобновляет показ. Цвет пересчитывается с течением времени.
+## Highlights and navigation
 
-При близости или наведении показывается ActionBar с игроком, материалом,
-действием, временем, координатами и миром. Чат автоматически не засыпается.
-Время отображается в `display-timezone`, по умолчанию Europe/Moscow.
+Highlights are temporary white stained-glass `BlockDisplay` entities with
+age-colored glowing outlines. The selected position receives stronger emphasis.
+They are hidden by default before being added to the world and shown only to the
+administrator who owns them, including when other players join later.
 
-Display-сущности `persistent=false`. Они удаляются при `/cpv clear`, выходе
-владельца, выключении плагина, перезагрузке конфигурации, истечении времени,
-уходе из области видимости и отзыве прав. Реальные блоки мира не изменяются.
+Default behavior:
 
-Для телепортации асинхронно загружается существующий целевой чанк без генерации.
-В режиме наблюдателя переход выполняется над выбранной позицией. В других
-режимах ищется свободное место с твёрдой опорой в ближайших загруженных блоках;
-при отсутствии такого места переход отклоняется. Мир, высота, граница мира и
-права перепроверяются. Плагин не меняет игровой режим и не гарантирует защиту
-от мобов или иных окружающих опасностей после телепортации.
+- Show up to 100 unique positions within 96 blocks of the administrator.
+- Render only in already loaded chunks of the current world.
+- Refresh every 10 ticks, creating at most 10 highlights per administrator per cycle.
+- Keep highlights for 300 seconds after a search or event selection.
+- Show nearby or targeted event details in the action bar.
+- Display timestamps in the configurable `display-timezone`, initially `Europe/Moscow`.
 
-## Реальное API CoreProtect и ограничения
+Multiple events at one position remain separate GUI entries. A shared highlight
+uses the selected event, or otherwise the newest event at that position.
+Selecting another event restarts the display lifetime. Highlights are removed
+on clear, logout, plugin shutdown, configuration reload, expiry, movement out of
+range, or loss of permissions. They are not persistent world entities.
 
-Проверен предоставленный владельцем **CoreProtect-24.1.jar**, API **12**.
-Публичные методы проверены непосредственно через `javap`; компиляция выполнена
-против этого файла. Документация по умолчанию уже описывает API v13, но его
-методы и `LookupOptions.world/includeMaterials/containerActions` здесь **не используются**.
+Glass is partially transparent, but `BlockDisplay` does not provide arbitrary
+alpha transparency. Appearance depends on client rendering settings and shaders.
+Normal entity tracking and view-distance limits still apply.
 
-Для блоков используется `performPartialLookup(...)` с ограничением количества
-строк на стороне API, фильтрами имени, исторического Material и действий 0/1/2.
-`INTERACT` соответствует записанным CoreProtect взаимодействиям (action 2);
-это не все возможные действия Bukkit. События должны быть включены в логировании
-CoreProtect и ещё не удалены purge.
+Teleportation asynchronously loads an existing destination chunk without
+generating one. Spectators move above the event position. Other game modes require
+an available location with solid support nearby; otherwise teleportation is
+declined. The plugin checks permissions, world availability, height, and world
+border before teleporting. It does not change the player's game mode or protect
+against every environmental hazard afterward.
 
-Для контейнеров используется `containerLookup(LookupOptions)`: `user`, `time`,
-`radius`, `limit`. Action 1 — добавление, 0 — изъятие из контейнера.
-`ContainerResult.getType()` означает **предмет**, а не CHEST/BARREL.
-Поэтому выбранный Material не передаётся как фильтр предметов.
+## Search coverage and limits
 
-В v12 нет фильтра целого мира/типа контейнера/действия в typed options. Для
-режимов WORLD и ALL читается ограниченная выборка транзакций пользователя из
-всех миров, затем применяется фильтр мира и действий. Для RADIUS область
-ограничивается API. CoreProtect трактует радиус как включительный **квадрат X/Z
-на всех высотах**, а не сферу. Центр фиксируется в момент `/cpv search`.
+### Worlds and radius
 
-Тип контейнера выводится из ближайшей записи PLACE/INTERACT не позднее
-транзакции по тем же XYZ и миру, с учётом последующего BREAK до транзакции.
-История берётся по всем игрокам через отдельный ограниченный публичный запрос
-радиуса 1 с последующим точным фильтром XYZ, без чтения современных блоков.
-Проверяются максимум 128 позиций, до 1000 строк окружения каждой позиции.
-Берётся доступная история за `Integer.MAX_VALUE` секунд. Отмены/тайм-аут
-проверяются между API-вызовами и при обработке строк.
+For all-player **block** searches, `world` searches the current world and `all`
+merges searches across the worlds loaded when the request starts. **Unloaded
+worlds are excluded from that all-player block search**, and a notice is shown
+afterward. A specific player's block search with `all` can query available
+CoreProtect history from unloaded worlds. Searches do not load or generate chunks.
 
-При отсутствии доказательства, откате ближайшего события, смене материала в
-одну секунду или совпадении размещения/разрушения с секундой транзакции запись
-пропускается при поиске конкретного Material. В режиме всех блоков запись
-включается с неизвестным типом контейнера. API хранит время с точностью до секунды, поэтому порядок таких
-событий нельзя надёжно восстановить. Число записей без подтверждённого материала
-показывается отдельно. Это **вывод по доступному журналу**, не самостоятельное
-доказательство типа контейнера; неполное логирование и перемещаемые контейнеры
-могут делать восстановление недостоверным. Для точного расследования сверяйте
-с исходной историей CoreProtect.
+CoreProtect API 12 requires a positive radius for a global block lookup. Global
+all-player searches therefore use a radius of 30,000,000 around X=0, Z=0 in each
+applicable world, covering legal vanilla coordinates independently of its world
+border. Normal radius searches use the administrator's captured position.
 
-По умолчанию просматривается максимум 2000 транзакций, результат ограничен 500
-событиями. Поиск блоков всех игроков читает до `search.block-scan-limit` (2000)
-строк на загруженный мир перед исключением системных действий, объединяет
-события по давности и ограничивает **всю** выборку до `max-results`, а не каждый
-мир отдельно. В режиме радиуса этот лимит применяется к одной области. Для
-конкретного игрока блоковый API-запрос по-прежнему ограничен `max-results`.
-Поиск общих событий на больших серверах следует начинать с небольшого периода
-и радиуса. Итоговый список может содержать меньше событий после постфильтрации.
+### Recorded actions and containers
 
-Транзакции ограничены 2000 строками, результат ограничен 500
-событиями. Если достигнут лимит чтения, истории или итоговых результатов, GUI
-открывается с сообщением об ограниченной выборке. Даже нулевой ответ может быть
-неполным после постфильтрации. Уточните игрока, период, радиус; не трактуйте
-ограниченную выборку как отсутствие действий. Полный COUNT всех совпадений
-не выполняется. Пагинация GUI работает по сохранённой выборке, без повторного SQL.
+Only events logged and retained by CoreProtect can be found. `INTERACT` means
+CoreProtect's recorded interaction action, not every possible Bukkit interaction.
 
-В ALL блоковые и подходящие контейнерные события объединяются, сортируются
-по времени от новых к старым и обрезаются до `max-results`.
-CoreProtect API может сам журналировать SQL-ошибки и вернуть пустой список;
-публичный API не всегда позволяет отличить это от отсутствия событий.
+Container transaction material refers to the **item**, rather than the container
+block. CPVisualizer infers the historical container type from earlier block
+events at the same world and position, considering subsequent destruction.
+It does not identify a past container by reading the current block.
 
-## Потоки, ресурсы и конфигурация
+API 12 container lookups support user, time, radius, and row-limit options.
+World and transaction-action filters are applied afterward. Historical evidence
+uses bounded block lookups at each transaction position.
 
-Все обращения к истории выполняются в ограниченном `ThreadPoolExecutor`:
-2 рабочих потока, очередь 8 запросов, cooldown 1000 мс. Запрос получает снимок
-фильтров, позиции и доступных миров, созданный на основном потоке.
-Рабочие потоки используют только публичные операции чтения CoreProtect и
-преобразование данных, не создают блоки/инвентари/сущности и не телепортируют игроков.
-Публикация результатов и весь GUI/рендер выполняются на основном потоке.
+For a specific container filter such as `CHEST` or `BARREL`, events without
+sufficient historical evidence are excluded. With all blocks selected, those
+transactions remain visible with an unknown container type; the item type appears
+only in additional details. Rolled-back events, incomplete logs, movable
+containers, and same-second changes can make historical inference uncertain.
+Cross-check the original CoreProtect history when an investigation requires
+certainty.
 
-Новый поиск отменяет публикацию предыдущего, а стоящая в очереди старая задача
-удаляется. CoreProtect API не предоставляет отмены JDBC-запроса: уже исполняющийся
-API-вызов остаётся занимать рабочий поток до возврата. Тайм-аут 30 секунд закрывает
-пользовательский запрос и отбрасывает поздний ответ; он не обещает прервать SQL.
-Число работающих запросов при этом не увеличивается.
+### Bounded results
 
-`config.yml` содержит лимиты, периоды, цвета, расстояние и время жизни.
-Цвета: GREEN, YELLOW, GOLD/ORANGE, RED, BLUE, WHITE, AQUA, PURPLE, `'#RRGGBB'`.
-Пороги давности должны строго возрастать. Некорректная конфигурация при старте
-отключает плагин; при reload остаются предыдущие проверенные настройки.
-Изменение количества потоков или ёмкости очереди требует перезапуска сервера:
-так reload не создаёт параллельно новые пулы поверх ещё выполняющегося SQL.
+| Setting | Default | Purpose |
+|---|---|---|
+| `search.max-results` | 500 | Maximum events in the final merged results. |
+| `search.block-scan-limit` | 2000 | Rows read per world or radius area for all-player block searches before system actors are removed. |
+| `search.container-scan-limit` | 2000 | Maximum container transactions read before additional filtering. |
+| `search.history-position-limit` | 128 | Maximum positions checked for historical container evidence. |
+| `search.history-row-limit` | 1000 | Maximum historical rows examined per position. |
+| `search.max-time` | `30d` | Maximum selectable search period. |
+| `search.max-radius` | 5000 | Maximum user-selected radius. |
 
-## Архитектура и структура
+Specific-player block lookups are limited directly to `search.max-results`.
+For action `ALL`, matching block and container events are merged, sorted newest
+first, and trimmed to the final result limit. GUI pagination uses this saved
+selection and does not issue another query per page.
 
-```text
-CPVisualizer/
-├── build.gradle.kts
-├── settings.gradle.kts
-├── gradlew / gradlew.bat / gradle/wrapper/
-├── libs/                         # необязательный собственный CoreProtect-24.1.jar
-├── PUBLISHING.md / CHANGELOG.md
-├── src/main/resources/
-│   ├── plugin.yml
-│   └── config.yml
-├── src/main/java/ru/mamont/cpv/
-│   ├── CoreProtectVisualizerPlugin.java  # lifecycle, права, сессии
-│   ├── CoreProtectHook.java              # только чтение CoreProtect API
-│   ├── BlockLookupPlan.java               # области запросов, ограничения API v12
-│   ├── FilterSelection.java               # all/* и исключение системных имён
-│   ├── SearchManager.java                # очередь, отмена, доставка результата
-│   ├── SearchQuery.java                  # снимок фильтров
-│   ├── SearchResult.java                 # события, независимые от сущностей
-│   ├── PlayerSearchSession.java          # отдельное состояние администратора
-│   ├── HistoryResolver.java              # проверка исторического материала
-│   ├── ResultRenderer.java               # заменяемый интерфейс рендера
-│   ├── VisualizationManager.java         # приватные BlockDisplay и ActionBar
-│   ├── NavigationManager.java            # выбор и телепортация
-│   ├── GuiManager.java                   # меню, фильтры, пагинация
-│   ├── CommandManager.java               # команды и completion
-│   ├── ConfigManager.java                # проверенная конфигурация
-│   ├── ActionType.java
-│   └── TimeParser.java
-└── src/test/java/ru/mamont/cpv/
-    ├── TimeParserTest.java
-    ├── HistoryResolverTest.java
-    ├── CoreProtectHookTest.java
-    └── FilterSelectionTest.java
-```
+A limit notice means the result may be incomplete. Additional filtering can
+produce fewer results, including zero, even after the scan limit is reached.
+Narrow the player, period, or radius before concluding that an action did not
+occur. CoreProtect may log a database error and return an empty response; its
+public API does not always distinguish that response from no matching history.
 
-Для будущего Fabric-клиента предусмотрена граница `ResultRenderer`.
-Новая реализация сможет читать сессии и отправлять `SearchResult` пакетами
-вместо создания entities. Понадобятся отдельные handshake/version negotiation,
-проверка наличия мода и лимиты пакетов; текущая версия ничего клиенту по
-пользовательским каналам не отправляет и мода не содержит.
+## Configuration and resource use
 
-## Сборка
+Configuration is created at `plugins/CPVisualizer/config.yml` on first startup.
+It controls search limits, time presets, colors, visibility distance, lifetime,
+and timestamp timezone.
 
-Установите JDK 25 и задайте JAVA_HOME. В текущей рабочей папке уже есть ваш
-CoreProtect 24.1 в `libs/CoreProtect-24.1.jar`: он используется для компиляции.
-Если локального JAR нет, Gradle скачает `net.coreprotect:coreprotect:24.1`
-из официального Maven. Для явной проверки публичной зависимости используйте
-`gradlew.bat clean build -PcoreProtectFromMaven`.
+History queries run in a bounded worker pool: two concurrent queries, eight
+queued requests, a 1000 ms cooldown, and a 30-second user-facing timeout by
+default. GUI updates, entity rendering, and teleportation run on Paper's main
+thread. A new search cancels delivery of the previous response and removes a
+queued predecessor where possible.
+
+CoreProtect does not expose JDBC query cancellation. A timeout discards late
+results; an already running API call occupies its worker until it returns.
+Restart the server to change pool size or queue capacity.
+
+Age thresholds must increase strictly. Supported colors include `GREEN`,
+`YELLOW`, `GOLD`/`ORANGE`, `RED`, `BLUE`, `WHITE`, `AQUA`, `PURPLE`, and quoted
+hex colors such as `'#RRGGBB'`. Invalid startup configuration disables the plugin.
+A failed reload retains the previous valid settings.
+
+## Building from source
+
+Install JDK 25 and set `JAVA_HOME`.
+
+Windows:
 
 ```powershell
 .\gradlew.bat clean build
 ```
 
-Linux/macOS: `sh gradlew clean build`.
+Linux or macOS:
 
-Используются Gradle Wrapper 9.1.0, Paper API `26.2.build.129-stable`, JUnit 5.
-CoreProtect и Paper — compileOnly для основного кода, не включаются в итоговый JAR.
-Для тестов они дополнительно доступны вместе с Mockito; в релиз это не попадает.
-Результат: `build/libs/CPVisualizer.jar`. Первый запуск сборки требует сети.
-Архив исходников не содержит чужой серверный JAR; публичная сборка использует Maven.
+```sh
+sh gradlew clean build
+```
 
-На этой Windows-машине Gradle 9.1.0 запускает тестовый worker с ошибкой
-`GradleWorkerMain` при кириллице в пути проекта/кэша. Для повторной полной
-сборки распакуйте исходники в каталог с латинским путём и укажите такой же
-`GRADLE_USER_HOME`. Проверенная сборка выполнена в отдельной временной копии
-без кириллицы; её исходники совпадают с этим проектом. Подмена буквой диска
-через subst проблему не решила. На работу готового JAR это не влияет.
+The build uses Gradle Wrapper 9.1.0 and Paper API `26.2.build.129-stable`.
+Without a local CoreProtect JAR, Gradle downloads
+`net.coreprotect:coreprotect:24.1` from the official PlayPro Maven repository.
+Optionally place a compatible JAR at `libs/CoreProtect-24.1.jar` to compile
+against that local dependency. To force the Maven dependency on Windows:
 
-## Проверка на сервере перед эксплуатацией
+```powershell
+.\gradlew.bat clean build -PcoreProtectFromMaven
+```
 
-Компиляция и автоматические тесты не заменяют проверку двух клиентов на сервере.
-Сценарии для проверки собраны в [TESTING.md](TESTING.md).
+Output: `build/libs/CPVisualizer.jar`. Paper and CoreProtect are compile-only
+dependencies and are not bundled. JUnit and Mockito are used only for tests.
+The first build needs network access.
 
-## Первичные источники, проверенные 02.10.2026
+If Gradle's Windows test worker fails with `GradleWorkerMain` under a non-ASCII
+project or cache path, use ASCII-only paths for the checkout and
+`GRADLE_USER_HOME`. This build-path issue does not affect the installed JAR.
 
-- [Paper: настройка проекта / Java 25](https://docs.papermc.io/paper/dev/project-setup/)
-- [Paper API 26.2](https://jd.papermc.io/paper/26.2/)
-- [CoreProtect v24.1: поддержка Minecraft 26.2](https://github.com/PlayPro/CoreProtect/releases/tag/v24.1)
-- [CoreProtect API v12](https://docs.coreprotect.net/api/version/v12/)
-- [Исходник CoreProtectAPI в теге v24.1](https://github.com/PlayPro/CoreProtect/blob/v24.1/src/main/java/net/coreprotect/CoreProtectAPI.java)
-- [LookupOptions в теге v24.1](https://github.com/PlayPro/CoreProtect/blob/v24.1/src/main/java/net/coreprotect/api/LookupOptions.java)
+## Validation
 
-Исходники проекта написаны отдельно; код реализации CoreProtect не копировался.
+Version 1.1.0 passed all 14 automated tests and clean builds against both the
+local CoreProtect 24.1 JAR and the official Maven artifact. **In-game testing
+on a running Paper server with two clients has not yet been completed.**
+See [TESTING.md](TESTING.md) for the server verification checklist.
+
+## Reference documentation
+
+- [Paper project setup](https://docs.papermc.io/paper/dev/project-setup/)
+- [Paper 26.2 API](https://jd.papermc.io/paper/26.2/)
+- [CoreProtect 24.1 release](https://github.com/PlayPro/CoreProtect/releases/tag/v24.1)
+- [CoreProtect API 12](https://docs.coreprotect.net/api/version/v12/)
+- [CoreProtect API source at v24.1](https://github.com/PlayPro/CoreProtect/blob/v24.1/src/main/java/net/coreprotect/CoreProtectAPI.java)
+
+The implementation targets API 12 and does not rely on API 13-only lookup
+options. CPVisualizer's implementation is independent; CoreProtect's
+implementation is not copied into this project.
