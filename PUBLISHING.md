@@ -1,43 +1,51 @@
-# Публикация CPVisualizer
+# Publishing CPVisualizer
 
-Подготовленная версия: **1.1.0**, Paper 26.2, Java 25, CoreProtect API >=12.
+Version: **1.1.0**. Target: Paper 26.2, Java 25, CoreProtect 24.1 / API 12.
 
-## GitHub
+## Distribution pages
 
-1. Создайте публичный репозиторий с названием `CPVisualizer`.
-2. Загрузите содержимое публичного архива исходников из папки `CPVisualizer/`.
-   В корне репозитория должны находиться README.md и build.gradle.kts.
-3. Выберите лицензию своего аддона и добавьте её файл LICENSE перед релизом.
-   В текущей подготовке лицензия за владельца проекта не назначена.
-4. Создайте релиз с тегом `v1.1.0`; приложите **CPVisualizer.jar** и описание
-   из CHANGELOG.md. Укажите Paper 26.2 / Java 25 и обязательный CoreProtect.
-5. Пользователи устанавливают CoreProtect отдельно и кладут аддон рядом с ним.
+- [GitHub repository](https://github.com/vladnow/CPVisualizer)
+- [GitHub release 1.1.0](https://github.com/vladnow/CPVisualizer/releases/tag/v1.1.0)
+- [Hangar project](https://hangar.papermc.io/vladnow/CPVisualizer)
+- [Hangar version 1.1.0](https://hangar.papermc.io/vladnow/CPVisualizer/versions/1.1.0)
 
-Публичный архив исключает серверный CoreProtect JAR, build/, .gradle/ и Git-данные.
-Не загружайте в репозиторий весь локальный каталог вместе с libs/*.jar вручную:
-веб-загрузка не применяет правила .gitignore автоматически. При публикации
-через Git эти JAR исключены .gitignore.
+The Hangar download was retrieved and its SHA-256 matched the GitHub release JAR:
+`32a58bf2f010779b2873ddc77f1cf978caa4f704b759b122de377ca06420ddb8`.
 
-Локальный CoreProtect используется только для компиляции. В публичной копии
-Gradle получает `net.coreprotect:coreprotect:24.1` из Maven PlayPro; серверный
-CoreProtect не включается в аддон. Чужие библиотеки тестирования тоже не входят
-в релизный JAR. Аддон не содержит скопированной реализации CoreProtect.
+The current README uses English documentation and neutral player examples.
+The release's updated versioned source archive includes that README. The original
+tag and original release assets remain historical snapshots.
 
-## Другие площадки
+## Packaging
 
-- [Hangar](https://hangar.papermc.io/) — каталог плагинов экосистемы Paper.
-- [Modrinth](https://modrinth.com/) — поддерживает проекты типа plugin.
+Publish only CPVisualizer's JAR and the public source archive. Exclude local
+CoreProtect JARs, build output, Gradle caches, Git data, and credentials.
+Web uploads do not automatically honor `.gitignore`.
 
-При создании страницы выберите Paper и Minecraft 26.2, укажите CoreProtect
-как обязательную внешнюю зависимость. В описание добавьте ограничения API v12
-из README: общий блоковый поиск ALL охватывает загруженные миры, результаты
-ограничены, тип контейнера восстанавливается по доступному журналу.
-Предварительно проверьте плагин на тестовом сервере по TESTING.md.
+CoreProtect is installed separately. Public checkouts compile against the official
+`net.coreprotect:coreprotect:24.1` Maven artifact when no local JAR is present.
+Paper, CoreProtect, and test libraries are not bundled in the plugin JAR.
 
-Публикация на внешних площадках из этого чата ещё не выполнялась.
+Use Admin Tools and Addon categories where available. Select only Paper 26.2,
+and mark CoreProtect as a required dependency. Do not claim Folia compatibility
+or completed in-game testing. Preserve the result-limit and loaded-world
+restrictions described in README.md.
 
-Официальные инструкции:
+No project license has been selected. Hangar lists the license as Unspecified.
 
-- [Создание репозитория GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/quickstart-for-repositories)
-- [Публикация на Hangar](https://docs.papermc.io/misc/hangar-publishing/)
-- [Типы проектов Modrinth](https://support.modrinth.com/en/articles/8800818-about-modrinth)
+## Other platforms
+
+SpigotMC and CurseForge require an authenticated author account before uploading.
+No authenticated session was available for either platform during this publication.
+
+Modrinth's current policy does not allow public publication of projects primarily
+generated with AI. This implementation was generated from project requirements
+using AI, so it has not been submitted for public discovery on Modrinth.
+Do not omit or misrepresent the development process in a submission.
+
+- [Modrinth AI policy](https://support.modrinth.com/en/articles/16551575-disclosure-and-usage-of-ai)
+- [Hangar resource guidelines](https://hangar.papermc.io/guidelines)
+- [Hangar publishing documentation](https://docs.papermc.io/misc/hangar-publishing/)
+
+Run the server checklist in TESTING.md before relying on the plugin for live
+investigations. Automated builds and tests do not replace a two-client server test.

@@ -10,6 +10,8 @@ independent session. No client mod or ProtocolLib is required.
 The plugin reads history through the public CoreProtect API. It does not change
 real blocks, roll back events, or modify CoreProtect's configuration or database.
 
+Downloads: [GitHub Releases](../../releases/latest) · [Hangar](https://hangar.papermc.io/vladnow/CPVisualizer)
+
 ## Requirements and installation
 
 | Requirement | Version |
