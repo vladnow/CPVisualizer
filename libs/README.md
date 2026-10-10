@@ -1,9 +1,6 @@
-Здесь можно использовать собственный `CoreProtect-24.1.jar` для сборки.
-Если файла нет, Gradle получает API 24.1 из официального Maven PlayPro.
+An optional local `CoreProtect-24.1.jar` can be placed here for compilation.
+Without that file, Gradle uses API 24.1 from the official PlayPro Maven repository.
 
-В рабочей папке уже находится копия JAR, предоставленного владельцем сервера.
-SHA256: `A7137839A5B20D993E168381DEE22136C4CA77979C9D5627CCBDB7C4058D737F`.
-
-Зависимость используется только для компиляции. В CPVisualizer.jar она не включается.
-Архив исходников не распространяет CoreProtect. Локальный JAR исключён из Git.
-Флаг `-PcoreProtectFromMaven` принудительно выбирает публичную зависимость.
+CoreProtect is a compile-only dependency and is not included in CPVisualizer.jar.
+Local dependency JARs are excluded from Git and public source archives.
+Use `-PcoreProtectFromMaven` to force the public Maven dependency.
