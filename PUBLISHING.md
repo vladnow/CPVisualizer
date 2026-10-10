@@ -1,51 +1,24 @@
 # Publishing CPVisualizer
 
-Version: **1.1.0**. Target: Paper 26.2, Java 25, CoreProtect 24.1 / API 12.
+Current release: **1.1.1**, targeting Paper 26.3, Java 25 and CoreProtect API 12.
+The historical 1.1.0 release targets Paper 26.2.
 
-## Distribution pages
+## Public package
 
-- [GitHub repository](https://github.com/vladnow/CPVisualizer)
-- [GitHub release 1.1.0](https://github.com/vladnow/CPVisualizer/releases/tag/v1.1.0)
-- [Hangar project](https://hangar.papermc.io/vladnow/CPVisualizer)
-- [Hangar version 1.1.0](https://hangar.papermc.io/vladnow/CPVisualizer/versions/1.1.0)
+Publish the plugin JAR, source archive, English documentation and checksums.
+Exclude local CoreProtect dependencies, build/cache folders, local filesystem paths, credentials and server/player data. CoreProtect is installed separately and is not bundled inside CPVisualizer.
 
-The Hangar download was retrieved and its SHA-256 matched the GitHub release JAR:
-`32a58bf2f010779b2873ddc77f1cf978caa4f704b759b122de377ca06420ddb8`.
+Public checkouts use the official `net.coreprotect:coreprotect:24.1` Maven API dependency. CPVisualizer is MIT licensed; CoreProtect retains its own license.
 
-The current README uses English documentation and neutral player examples.
-The release's updated versioned source archive includes that README. The original
-tag and original release assets remain historical snapshots.
+Select Paper 26.3 only for this release, choose Admin Tools and Addon categories where available, and mark CoreProtect as required. Do not claim Folia compatibility or completed two-client visual testing.
 
-## Packaging
+## Development disclosure
 
-Publish only CPVisualizer's JAR and the public source archive. Exclude local
-CoreProtect JARs, build output, Gradle caches, Git data, and credentials.
-Web uploads do not automatically honor `.gitignore`.
+The implementation and documentation were generated with AI from project requirements and reviewed through builds, automated tests and server integration checks. The plugin itself does not call an AI service.
 
-CoreProtect is installed separately. Public checkouts compile against the official
-`net.coreprotect:coreprotect:24.1` Maven artifact when no local JAR is present.
-Paper, CoreProtect, and test libraries are not bundled in the plugin JAR.
-
-Use Admin Tools and Addon categories where available. Select only Paper 26.2,
-and mark CoreProtect as a required dependency. Do not claim Folia compatibility
-or completed in-game testing. Preserve the result-limit and loaded-world
-restrictions described in README.md.
-
-No project license has been selected. Hangar lists the license as Unspecified.
-
-## Other platforms
-
-SpigotMC and CurseForge require an authenticated author account before uploading.
-No authenticated session was available for either platform during this publication.
-
-Modrinth's current policy does not allow public publication of projects primarily
-generated with AI. This implementation was generated from project requirements
-using AI, so it has not been submitted for public discovery on Modrinth.
-Do not omit or misrepresent the development process in a submission.
+Public discovery on Modrinth is not permitted for this implementation under its current AI-content policy. Other submissions must accurately answer any required development disclosures.
 
 - [Modrinth AI policy](https://support.modrinth.com/en/articles/16551575-disclosure-and-usage-of-ai)
-- [Hangar resource guidelines](https://hangar.papermc.io/guidelines)
-- [Hangar publishing documentation](https://docs.papermc.io/misc/hangar-publishing/)
+- [Hangar guidelines](https://hangar.papermc.io/guidelines)
 
-Run the server checklist in TESTING.md before relying on the plugin for live
-investigations. Automated builds and tests do not replace a two-client server test.
+Actual upload URLs and moderation states are recorded separately after publication. A prepared archive or successful build is not evidence of remote publication.

@@ -1,7 +1,7 @@
 plugins { java }
 
-group = "ru.mamont.cpvisualizer"
-version = "1.1.0"
+group = "io.github.cpvisualizer"
+version = "1.1.1"
 
 repositories {
     mavenCentral()
@@ -10,9 +10,9 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:26.2.build.129-stable")
+    compileOnly("io.papermc.paper:paper-api:26.3.build.169-beta")
     // Prefer the owner's server JAR; public checkouts build against the official Maven artifact.
-    val coreProtectJar = file("libs/CoreProtect-24.1.jar")
+    val coreProtectJar = file(providers.gradleProperty("coreProtectJar").getOrElse("libs/CoreProtect-24.1.jar"))
     if (coreProtectJar.exists() && !providers.gradleProperty("coreProtectFromMaven").isPresent) {
         compileOnly(files(coreProtectJar))
         testImplementation(files(coreProtectJar))
@@ -20,7 +20,7 @@ dependencies {
         compileOnly("net.coreprotect:coreprotect:24.1") { isTransitive = false }
         testImplementation("net.coreprotect:coreprotect:24.1") { isTransitive = false }
     }
-    testImplementation("io.papermc.paper:paper-api:26.2.build.129-stable")
+    testImplementation("io.papermc.paper:paper-api:26.3.build.169-beta")
     testImplementation("org.mockito:mockito-core:5.20.0")
     testImplementation(platform("org.junit:junit-bom:5.13.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -36,3 +36,5 @@ tasks.processResources {
 }
 tasks.test { useJUnitPlatform() }
 tasks.jar { archiveFileName.set("CPVisualizer.jar") }
+
+tasks.jar { from("LICENSE") }

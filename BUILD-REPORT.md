@@ -1,28 +1,34 @@
-# Отчёт сборки — 08.10.2026, CPVisualizer 1.1.0
+# Validation report: Paper 26.3
 
-- JDK: Eclipse Temurin 25.0.4.1+1, Windows x64, локальный инструмент сборки.
-- Gradle: 9.1.0, официальный дистрибутив с проверенным SHA256.
-- Paper API: 26.2.build.129-stable.
-- CoreProtect: предоставленный владельцем `CoreProtect-24.1.jar`, API 12.
-- API JAR проверен через javap; фактически используемые методы разрешаются компилятором.
-- `clean build` против предоставленного серверного JAR: **BUILD SUCCESSFUL**.
-- `clean build -PcoreProtectFromMaven` против публичной зависимости API: **BUILD SUCCESSFUL**.
-- JUnit: **14 тестов, 0 ошибок, 0 пропусков** в обоих вариантах сборки.
-- CoreProtect/Paper не включаются в итоговый JAR.
-- Gradle Wrapper включён в исходники, checksum дистрибутива зафиксирован.
+Date: 2026-10-10. CPVisualizer 1.1.1 and unofficial CoreProtect 24.1-paper26.3.1.
 
-Первая компиляция прошла непосредственно в рабочей папке. Затем тестовый
-worker Gradle не запускался из-за пути с кириллицей; проверка через subst
-тоже не помогла. Полная успешная сборка выполнена в временной копии проекта
-в `%TEMP%/cpv-verification-20261008/project` с кэшем по латинскому пути.
-JAR из этой сборки скопирован в `build/libs/CPVisualizer.jar`.
+## Builds and automated tests
 
-Добавленные тесты проверяют параметры вызовов реальных методов CoreProtect API
-с подставным ответом, общий поиск по миру/радиусу, снятие ограничения Material,
-слияние разных миров с общим лимитом, исключение системных имён, контейнеры
-с неизвестным Material и раннюю отмену. Тесты не обращаются к SQL.
+- Java 25, Gradle 9.1.0, Maven 3.9.11; pinned Paper API `26.3.build.169-beta`.
+- CoreProtect built successfully with Maven. The upstream v24.1 tag contains no Java unit tests; runtime checks were performed separately.
+- CPVisualizer passed 14 automated tests against the ported CoreProtect JAR and the official Maven API artifact.
+- The final publication build translates menus and messages to English and uses a neutral Java package. It is rebuilt and retested before uploading.
 
-Не выполнялись: запуск игрового сервера, реальные SQL-запросы к базе владельца,
-проверка отрисовки на двух клиентах. Эти проверки перечислены в TESTING.md.
-Совместимость на уровне компиляции подтверждена; интеграционное тестирование
-в игре не следует считать проведённым.
+## Actual Paper server checks
+
+Both plugins were verified on a disposable Paper 26.3 build 169 server with SQLite:
+
+- Plugin startup, CoreProtect API 12 and the explicit 26.3 adapter.
+- History writes and reads through CPVisualizer's actual CoreProtectHook.
+- All-player/all-block filters, exact player/material filters, exclusion of system actors, and merging two loaded worlds.
+- A transaction of three diamonds in a chest, resolved as historical container material CHEST.
+- Rollback and restore of STONE, SULFUR_SPIKE, POTENT_SULFUR and CHEST.
+- BlockDisplay creation and removal with public visibility and persistence disabled.
+- Clean shutdown and database persistence across restarts.
+
+Result: `PORT_SMOKE_PASS`. Event data was recorded through the API and server objects without connected game clients.
+
+## Verification limits
+
+Two-client GUI and private-marker rendering, events triggered by real players, player teleportation, MySQL, WorldEdit and Folia were not tested. See [TESTING.md](TESTING.md).
+
+This CoreProtect build preserves v24.1 behavior and database format. New entity tracking from upstream master, including cushion history, is not backported.
+
+## Historical 1.1.0 build
+
+The Paper 26.2 release passed the same 14 automated tests against both a local CoreProtect 24.1 dependency and the official Maven API artifact. Its original JAR remains unchanged.

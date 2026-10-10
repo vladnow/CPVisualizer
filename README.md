@@ -1,6 +1,6 @@
 # CPVisualizer
 
-**Private CoreProtect history visualization for Paper 26.2 and Java 25.**
+**Private CoreProtect history visualization for Paper 26.3 and Java 25.**
 
 CPVisualizer is a server-side administration plugin. Search recorded block and
 container events, browse them in an inventory GUI, and highlight matching
@@ -10,25 +10,27 @@ independent session. No client mod or ProtocolLib is required.
 The plugin reads history through the public CoreProtect API. It does not change
 real blocks, roll back events, or modify CoreProtect's configuration or database.
 
-Downloads: [GitHub Releases](../../releases/latest) · [Hangar](https://hangar.papermc.io/vladnow/CPVisualizer)
+Version **1.1.1** targets Paper 26.3 and Java 25. Menus, messages, and documentation are in English.
+Download the plugin and its source archive from [GitHub Releases](../../releases/latest).
+Version 1.1.0 remains available for Paper 26.2.
 
 ## Requirements and installation
 
 | Requirement | Version |
 |---|---|
-| Server | Paper 26.2 |
+| Server | Paper 26.3 |
 | Java | 25 |
-| Required plugin | CoreProtect 24.1, API 12 enabled |
+| Required plugin | CoreProtect with Paper 26.3 compatibility and API 12 enabled |
 
 1. Stop the server.
 2. Install CoreProtect separately, or keep the existing compatible installation.
-3. Download `CPVisualizer.jar` from [GitHub Releases](../../releases/latest).
+3. Take `CPVisualizer-1.1.1-paper26.3.jar` from the Paper 26.3 release bundle.
 4. Place the JAR in the server's `plugins/` directory alongside CoreProtect.
 5. Start the server with Java 25 and run `/cpv` in game as an operator.
 
-CoreProtect is a required dependency and is **not included** in the download.
+CoreProtect is a required dependency and is **not bundled inside** CPVisualizer.
 CPVisualizer disables itself if the dependency or its API is unavailable.
-Version 1.1.0's in-game menus and messages are in Russian; this README is in English.
+
 
 ## Quick start: all players and all blocks
 
@@ -247,7 +249,7 @@ Linux or macOS:
 sh gradlew clean build
 ```
 
-The build uses Gradle Wrapper 9.1.0 and Paper API `26.2.build.129-stable`.
+The build uses Gradle Wrapper 9.1.0 and Paper API `26.3.build.169-beta`.
 Without a local CoreProtect JAR, Gradle downloads
 `net.coreprotect:coreprotect:24.1` from the official PlayPro Maven repository.
 Optionally place a compatible JAR at `libs/CoreProtect-24.1.jar` to compile
@@ -256,6 +258,9 @@ against that local dependency. To force the Maven dependency on Windows:
 ```powershell
 .\gradlew.bat clean build -PcoreProtectFromMaven
 ```
+
+To verify against the separately built 26.3 port, pass
+`-PcoreProtectJar=<path-to-CoreProtect-24.1-paper26.3.1.jar>`.
 
 Output: `build/libs/CPVisualizer.jar`. Paper and CoreProtect are compile-only
 dependencies and are not bundled. JUnit and Mockito are used only for tests.
@@ -267,15 +272,19 @@ project or cache path, use ASCII-only paths for the checkout and
 
 ## Validation
 
-Version 1.1.0 passed all 14 automated tests and clean builds against both the
-local CoreProtect 24.1 JAR and the official Maven artifact. **In-game testing
-on a running Paper server with two clients has not yet been completed.**
+Version 1.1.1 passed all 14 automated tests against the modified CoreProtect
+24.1 build and Paper API `26.3.build.169-beta`. Both plugins loaded together on
+an actual Paper 26.3 build 169 server. Real SQLite history was read through the
+visualizer, and CoreProtect rollback/restore operations were checked on test
+blocks. Private BlockDisplay creation was checked on the server. **Visual
+verification of the GUI and private markers with two real clients remains
+outstanding.** MySQL and WorldEdit integration were not exercised.
 See [TESTING.md](TESTING.md) for the server verification checklist.
 
 ## Reference documentation
 
 - [Paper project setup](https://docs.papermc.io/paper/dev/project-setup/)
-- [Paper 26.2 API](https://jd.papermc.io/paper/26.2/)
+- [Paper 26.3 API](https://jd.papermc.io/paper/26.3/)
 - [CoreProtect 24.1 release](https://github.com/PlayPro/CoreProtect/releases/tag/v24.1)
 - [CoreProtect API 12](https://docs.coreprotect.net/api/version/v12/)
 - [CoreProtect API source at v24.1](https://github.com/PlayPro/CoreProtect/blob/v24.1/src/main/java/net/coreprotect/CoreProtectAPI.java)
@@ -283,3 +292,7 @@ See [TESTING.md](TESTING.md) for the server verification checklist.
 The implementation targets API 12 and does not rely on API 13-only lookup
 options. CPVisualizer's implementation is independent; CoreProtect's
 implementation is not copied into this project.
+
+## License
+
+CPVisualizer is distributed under the [MIT License](LICENSE). CoreProtect is a separate dependency with its own license.

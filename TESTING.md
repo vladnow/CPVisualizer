@@ -1,50 +1,36 @@
-# Проверка
+# Testing
 
-Автотесты: `gradlew.bat test` — разбор периодов, некорректный ввод/переполнение,
-история уничтоженного контейнера, замена материала, неоднозначность одной
-секунды, неизвестная история, откат и подтверждённое взаимодействие.
-Также проверяются реальные параметры обращений к замоканному API CoreProtect:
-все игроки/блоки, положительный радиус общего запроса, неизменность центра,
-конкретный Material, слияние миров с общим лимитом, исключение системных имён,
-сохранение неизвестного контейнера без подмены Material предметом и отмена
-до API-запроса. Это тесты логики аддона без подключения к серверной базе.
+Automated tests cover duration parsing and overflow, filter selection, historical container inference, all-player API parameters, inclusive X/Z radius bounds, captured search centers, world merging with a shared result limit, exclusion of system actors, unresolved container types, and cancellation before API calls.
 
-Ручная проверка на тестовом Paper 26.2 с вашим CoreProtect 24.1:
+```sh
+sh gradlew clean build -PcoreProtectFromMaven
+```
 
-1. Войти двумя OP и обычным игроком. Обычный игрок не может открыть `/cpv`.
-2. Игрок A ставит CHEST, взаимодействует, кладёт/забирает предметы, разрушает
-   сундук. Между действиями выдержать несколько секунд; дать CoreProtect
-   сбросить очередь журнала. Проверить PLACE/BREAK/INTERACT/контейнерные фильтры.
-3. Повторить в BARREL, заменить CHEST на BARREL в той же позиции.
-   Проверить корректный материал до и после замены.
-4. Запустить поиски двух OP с разными фильтрами. Каждый видит только свои метки.
-   Третий клиент входит после появления меток и не видит их.
-5. Выйти игроком A, найти его через `/cpv player <ник>`.
-6. Проверить WORLD/ALL/RADIUS в двух мирах, отрицательные координаты, разную высоту.
-   Радиус ограничивает квадрат X/Z.
-7. Сделать >45 событий: листать GUI, переключать next/prev, info, выбирать
-   событие. Попробовать shift-click, hotbar swaps и drag: вещи из GUI не забираются.
-8. `/cpv tp`: проверить наблюдателя, безопасное место, закрытую пещеру,
-   отсутствующий мир, запрет телепортации другим плагином, отозванные permissions.
-9. Во время поиска запустить новый поиск, clear, выйти с сервера, reload.
-   Старый ответ не должен восстанавливать метки или открывать устаревшее меню.
-10. Уменьшить лимиты: проверить сообщение об ограниченной выборке,
-    неизменный лимит активных запросов и отказ при заполнении очереди.
-11. Проверить цвета, ActionBar, истечение lifetime, смену мира, выгрузку чанка.
-12. Остановить и запустить сервер: визуальные сущности не должны сохраниться.
-13. Проверить отсутствие CoreProtect и API disabled: аддон не включается.
-14. Некорректный config.yml: понятная ошибка; ошибочный reload сохраняет
-    прежние проверенные настройки. Следить за логами самого CoreProtect.
-15. `/cpv player all` + `/cpv block all`: найти действия двух разных игроков
-    с CHEST и STONE; игрок может быть офлайн. Сравнить с точными фильтрами.
-16. `/cpv blocks all`, `/cpv bloks all`, `*`, кнопки GUI, tab completion:
-    общий выбор работает, последующий точный выбор возвращает ограничение.
-17. Проверить WORLD, ALL, RADIUS для всех игроков, включая мир с событиями
-    новее других миров. Общий лимит результатов не умножается на число миров.
-    Уведомление ALL сообщает ограничение на загруженные миры в API v12.
-18. История контейнера отсутствует: общий фильтр блока включает запись с
-    неизвестным типом; фильтр CHEST её исключает. Предмет внутри контейнера
-    не должен отображаться как Material самого контейнера.
+On Windows use `gradlew.bat`. These tests use mocked API responses and do not replace database or game-client checks.
 
-Эти интеграционные сценарии требуют запущенного сервера и клиентов;
-их выполнение не заявляется результатом одной успешной компиляции.
+The 2026-10-10 Paper 26.3 build 169 runtime checks exercised real SQLite history, both plugin startups, searches across two worlds, container inference, rollback/restore, and private BlockDisplay creation. See [BUILD-REPORT.md](BUILD-REPORT.md).
+
+## Manual test checklist
+
+Use a disposable Paper 26.3 server, Java 25 and a compatible CoreProtect installation with API 12 enabled.
+
+1. Join with two operators and one ordinary player. The ordinary player must not open `/cpv`.
+2. Place, interact with, fill, empty and break a chest; leave a few seconds between actions. Verify each action filter after CoreProtect flushes its queue.
+3. Repeat with a barrel and replace a chest with a barrel at the same position. Historical materials should match each period.
+4. Start independent searches with both operators. Each sees only their own highlights. A third client joining later must not see them.
+5. Log out one player and search their historical name with `/cpv player ExamplePlayer`.
+6. Check world, all-world and radius scopes in two worlds, including negative coordinates and different heights. Radius bounds form an X/Z square.
+7. Record more than 45 events. Check pagination, next/previous wrapping, details and selection. GUI shift-clicks, hotbar swaps and drags must not take items.
+8. Check teleportation in spectator and ordinary modes, unavailable worlds, world borders, blocked destinations, cancelled teleports and revoked permissions.
+9. During a search start another search, clear results, log out or reload configuration. Stale responses must not restore highlights or reopen menus.
+10. Lower query and result limits. Check bounded requests, queue rejection and notices that results may be incomplete.
+11. Check age colors, action-bar details, expiry, world changes, unloaded chunks and permission loss.
+12. Restart the server. Visualization entities must not persist.
+13. Remove CoreProtect or disable its API. CPVisualizer must disable cleanly.
+14. Test invalid startup configuration and an invalid reload. A failed reload must retain previous valid settings.
+15. Search `/cpv player all` and `/cpv block all` for two players and two materials; compare exact filters.
+16. Check `/cpv blocks all`, `/cpv bloks all`, `*`, GUI selectors and tab completion. Exact selection must restore its filter.
+17. Check the shared all-world result limit and the notice about loaded-world coverage in all-player block searches.
+18. With no container block history, all-block searches should retain the transaction as an unknown container. A CHEST filter must exclude it; transaction items must not masquerade as container material.
+
+Completion of these manual scenarios is not implied by a successful build or server-only integration test.
