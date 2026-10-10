@@ -1,7 +1,7 @@
 name: CPVisualizer
 version: '${version}'
-main: ru.mamont.cpv.CoreProtectVisualizerPlugin
-api-version: '26.2'
+main: io.github.cpvisualizer.CoreProtectVisualizerPlugin
+api-version: '26.3'
 description: Private visualization of CoreProtect history
 depend: [CoreProtect]
 commands:
